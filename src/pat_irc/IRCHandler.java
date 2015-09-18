@@ -15,6 +15,8 @@ import IRC_service.IRCService;
  */
 public class IRCHandler implements IRCService.Iface{
 
+    IRCServer server = new IRCServer();
+    
     @Override
     public void set_nick(String nick) throws TException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -22,7 +24,7 @@ public class IRCHandler implements IRCService.Iface{
 
     @Override
     public void join_channel(String channel) throws TException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        server.channel_list.add(channel);
     }
 
     @Override
@@ -32,7 +34,7 @@ public class IRCHandler implements IRCService.Iface{
 
     @Override
     public void broadcast_msg(String msg) throws TException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
     }
 
     @Override
