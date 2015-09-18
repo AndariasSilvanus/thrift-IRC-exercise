@@ -23,6 +23,7 @@ public class IRCServer {
     
     public static IRCHandler handler;
     public static IRCService.Processor processor;
+    public static String bufmsg;
     
     public static ArrayList<String> channel_list;
     
@@ -42,6 +43,17 @@ public class IRCServer {
                 }
             };
             new Thread(simple).start();
+            
+            Runnable simple1 = new Runnable() {
+            public void run() {
+                while(true){
+                            System.out.println("print buffer");
+                            System.out.println(bufmsg);
+                        }
+                    }
+                };
+            new Thread(simple1).start();
+            
         }
         catch (Exception x) {
             x.printStackTrace();

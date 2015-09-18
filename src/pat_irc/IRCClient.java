@@ -9,6 +9,8 @@ package pat_irc;
 import IRC_service.IRCService;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
@@ -31,7 +33,7 @@ public class IRCClient {
     
     public static void main(String [] args) {
         try {
-            nickname = "";
+            nickname = "defaultnick";
             channel_list = new ArrayList<String>();
             
             // Open connection
@@ -41,45 +43,83 @@ public class IRCClient {
             TProtocol protocol = new TBinaryProtocol(transport);
             IRCService.Client client = new IRCService.Client(protocol);
             
-            // Run mode
-            String mode = "", channel = "", msg = "";
-            Scanner input = new Scanner (System.in);
-            do {
-                mode = input.next();
-                if (!mode.equals("/EXIT")) {
-                    if (mode.equals("/NICK")) { // Set nickname's client
-                        nickname = input.next();
-                    }
-                    
-                    else if (mode.equals("/JOIN")) { // Join channel X
-                        channel = input.next();
-                        channel_list.add(channel);
-                        client.join_channel(channel);
-                    }
-                    
-                    else if (mode.equals("/LEAVE")) { // Leave channel X
-                        channel = input.next();
-                        channel_list.remove(channel);
-                    }
-                    
-                    else if (mode.charAt(0) == '@') { // Message channel X
-                        channel = mode.substring(1, mode.length()-1);
-                        msg = input.next();
-                    }
-                    
-                    else { // Message to all channel
-                        msg = mode + " " + input.nextLine();
-                        client.broadcast_msg(msg);
-                    }
-                }
-            } while (!mode.equals("/EXIT"));
             
-            // Close connection
-            transport.close();
+            Runnable simple2 = new Runnable() {
+            public void run() {
+            Scanner in = new Scanner(System.in);
+            String s;
+            while(true){
+                // Run mode
+                String mode = "", channel = "", msg = "";
+                Scanner input = new Scanner (System.in);
+                do {
+                    mode = input.next();
+                    if (!mode.equals("/EXIT")) {
+                        if (mode.equals("/NICK")) { // Set nickname's client
+                            nickname = input.next();
+                        }
+
+                        else if (mode.equals("/JOIN")) { // Join channel X
+                            channel = input.next();
+                            channel_list.add(channel);
+    //                        client.join_channel(channel);
+                        }
+
+                        else if (mode.equals("/LEAVE")) { // Leave channel X
+                            channel = input.next();
+                            channel_list.remove(channel);
+                        }
+
+                        else if (mode.charAt(0) == '@') { // Message channel X
+                            channel = mode.substring(1, mode.length()-1);
+                            msg = input.next();
+                        }
+
+                        else { // Message to all channel
+                            msg = mode + " " + input.nextLine();
+                            try {
+                                client.broadcast_send(msg, nickname);
+//                            client.broadcast_msg(msg);
+                            } catch (TException ex) {
+                                Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }
+                } while (!mode.equals("/EXIT"));
+
+                }
+            }
+            };
+            new Thread(simple2).start();
+        
+        Runnable listen = new Runnable() {
+            public void run() {
+            while(true){
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                try {
+                    if (!(client.broadcast_recv().isEmpty())){
+                        System.out.println(client.broadcast_recv());
+                    }
+                } catch (TException ex) {
+                    Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        };
+            new Thread(listen).start();
+        // Close connection
+//            transport.close();
         }
         catch (TException x) {
             x.printStackTrace();
         }
+        
+        
+            
     }
     private static void perform(IRCService.Client client) throws TException {
 //        int product = client.multiply(3,5);
