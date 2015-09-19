@@ -77,7 +77,9 @@ public class IRCClient {
                                     channel = input.next();
                                     try {
                                         client.join_channel(channel);
-                                        channel_list.add(channel);
+                                        if(!(channel_list.contains(channel))){
+                                            channel_list.add(channel);
+                                        }
                                         System.out.println("Join pada channel " + channel + "berhasil!");
                                         // client.join_channel(channel);
                                     } catch (TException ex) {
