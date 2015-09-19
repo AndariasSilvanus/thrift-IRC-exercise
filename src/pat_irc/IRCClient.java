@@ -56,11 +56,11 @@ public class IRCClient {
 //                        Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
 //                    }
                     
-                    while(true){
+//                    while(true){
                         // Run mode
                         do {
                             mode = input.next();
-                            if (!mode.equals("/EXIT")) {
+//                            if (!mode.equals("/EXIT")) {
                                 
                                 if (mode.equals("/NICK")) { // Set nickname's client
                                     nickname = input.next();
@@ -100,6 +100,11 @@ public class IRCClient {
 //                                    }
                                 }
                                 
+                                else if (mode.equals("/EXIT")) { // Exit 
+                                    System.out.println("Exiting program...");
+                                    System.exit(0);
+                                }
+                                
                                 else {
                                     if (mode.charAt(0) == '@') { // Message channel X
                                         channel = mode.substring(1, mode.length());
@@ -120,10 +125,7 @@ public class IRCClient {
                                         }
                                     }
                                 }
-                            }
-                        } while (!mode.equals("/EXIT"));
-
-                    }
+                        } while (true);
                 }
             };
             new Thread(main_thread).start();
