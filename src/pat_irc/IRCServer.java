@@ -26,20 +26,17 @@ public class IRCServer {
     public static IRCHandler handler;
     public static IRCService.Processor processor;
     
-    public static String bufmsg;
     public static List<Message> msgList;
     public static List<String> channel_list;
     
     public IRCServer() {
         channel_list = new ArrayList<String>();
-        bufmsg = "";
         msgList = new ArrayList<Message>();
     }
     
     public static void main(String [] args) {
         try {
             channel_list = new ArrayList<String>();
-            bufmsg = "";
             msgList = new ArrayList<Message>();
             
             handler = new IRCHandler();
@@ -73,6 +70,7 @@ public class IRCServer {
             x.printStackTrace();
         }
     }
+    
     public static void run_server(IRCService.Processor processor) {
         try {
             TServerTransport serverTransport = new TServerSocket(9090);
