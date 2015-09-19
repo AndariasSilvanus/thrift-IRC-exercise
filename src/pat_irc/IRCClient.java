@@ -8,6 +8,7 @@ package pat_irc;
 
 import IRC_service.IRCService;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,6 +54,7 @@ public class IRCClient {
                         // Run mode
                         String mode = "", channel = "", msg = "";
                         Scanner input = new Scanner (System.in);
+                        generateUname();
                         do {
                             mode = input.next();
                             if (!mode.equals("/EXIT")) {
@@ -123,6 +125,18 @@ public class IRCClient {
         
             
     }
+    
+     public static void generateUname(){
+	String usernames[] = {"Ludger","Elle","Jude","Milla","Alvin","Rowen","Elize","Leia"};
+	String uname;
+        Random rand = new Random();
+	
+	uname = usernames[(int)(rand.nextInt(usernames.length))] + (int) rand.nextInt(50) + 1;
+	System.out.println("Username: " + uname);
+	
+	nickname = uname;
+    }
+     
     private static void perform(IRCService.Client client) throws TException {
 //        int product = client.multiply(3,5);
 //        System.out.println("3*5=" + product);

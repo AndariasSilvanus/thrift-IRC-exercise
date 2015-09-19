@@ -64,6 +64,7 @@ public class IRCServer {
             x.printStackTrace();
         }
     }
+    
     public static void run_server(IRCService.Processor processor) {
         try {
             TServerTransport serverTransport = new TServerSocket(9090);
