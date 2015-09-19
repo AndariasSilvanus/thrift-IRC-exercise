@@ -23,21 +23,26 @@ public class IRCServer {
     
     public static IRCHandler handler;
     public static IRCService.Processor processor;
-    public static String bufmsg;
     
+    public static String bufmsg;
     public static ArrayList<String> channel_list;
     
     public IRCServer() {
         channel_list = new ArrayList<String>();
+        bufmsg = "";
     }
     
     public static void main(String [] args) {
         try {
+            channel_list = new ArrayList<String>();
+            bufmsg = "";
+            
             handler = new IRCHandler();
             processor = new IRCService.Processor(handler);
             
             // Thread for client
             Runnable simple = new Runnable() {
+                @Override
                 public void run() {
                     run_server(processor);
                 }
@@ -45,15 +50,15 @@ public class IRCServer {
             new Thread(simple).start();
             
             Runnable simple1 = new Runnable() {
-            public void run() {
-                while(true){
+                @Override
+                public void run() {
+                    while(true){
                             System.out.println("print buffer");
                             System.out.println(bufmsg);
                         }
                     }
                 };
             new Thread(simple1).start();
-            
         }
         catch (Exception x) {
             x.printStackTrace();

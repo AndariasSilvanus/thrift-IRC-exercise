@@ -42,7 +42,7 @@ public class IRCHandler implements IRCService.Iface{
     @Override
     public void broadcast_send(String msg, String uname) throws TException {
         System.out.println(msg);
-        IRCServer.bufmsg ="("+uname+") "+ msg;
+        IRCServer.bufmsg ="(" + uname + ") " + msg;
     }
 
     @Override
