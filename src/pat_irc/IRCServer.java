@@ -7,7 +7,9 @@
 package pat_irc;
 
 import IRC_service.IRCService;
+import IRC_service.Message;
 import java.util.ArrayList;
+import java.util.List;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TServer.Args;
 import org.apache.thrift.server.TSimpleServer; 
@@ -25,36 +27,43 @@ public class IRCServer {
     public static IRCService.Processor processor;
     
     public static String bufmsg;
-    public static ArrayList<String> channel_list;
+    public static List<Message> msgList;
+    public static List<String> channel_list;
     
     public IRCServer() {
         channel_list = new ArrayList<String>();
         bufmsg = "";
+        msgList = new ArrayList<Message>();
     }
     
     public static void main(String [] args) {
         try {
             channel_list = new ArrayList<String>();
             bufmsg = "";
+            msgList = new ArrayList<Message>();
             
             handler = new IRCHandler();
             processor = new IRCService.Processor(handler);
             
             // Thread for client
-            Runnable simple = new Runnable() {
+            Runnable runServer = new Runnable() {
                 @Override
                 public void run() {
                     run_server(processor);
                 }
             };
-            new Thread(simple).start();
+            new Thread(runServer).start();
             
             Runnable simple1 = new Runnable() {
                 @Override
                 public void run() {
                     while(true){
-                            System.out.println("print buffer");
-                            System.out.println(bufmsg);
+                            int panjang = msgList.size();
+                            System.out.println("\npanjang msgList: " + Integer.toString(panjang));
+                            System.out.print("isi: ");
+                            for (int i=0; i<msgList.size(); i++) {
+                                System.out.print(msgList.get(i).getMsg() + "|||");
+                            }
                         }
                     }
                 };

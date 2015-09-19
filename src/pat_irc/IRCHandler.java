@@ -6,8 +6,11 @@
 
 package pat_irc;
 
-import org.apache.thrift.TException;
 import IRC_service.IRCService;
+import IRC_service.Message;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.thrift.TException;
 
 /**
  *
@@ -15,43 +18,90 @@ import IRC_service.IRCService;
  */
 public class IRCHandler implements IRCService.Iface{
 
-    IRCServer server = new IRCServer();    
+//    String nickname;
+//    List<String> channel_list;
+//    long clientLastFetch;
+
+//    public IRCHandler() {
+//        channel_list = new ArrayList<String>();
+//    }
 
     @Override
-    public void join_channel(String channel) throws TException {
-        server.channel_list.add(channel);
+    public void msg_channel_send(String msg, String channel, String uname) throws TException {
+        List<String> channeList = new ArrayList<String>();
+        channeList.add(channel);
+        Message msg_temp = makeMessage(msg, channeList, uname);
+        IRCServer.msgList.add(msg_temp);
     }
-
-    @Override
-    public String broadcast_recv() throws TException {
+    
+    private Message makeMessage(String msg, List<String> chaneList, String nickname) {
+        Message msg_temp = new Message();
+        msg_temp.setForm(nickname);
+        msg_temp.setMsg(msg);
+        msg_temp.setToChannel(chaneList);
         
-        String msg = IRCServer.bufmsg;
-        //flush
-//        IRCServer.bufmsg = "";
+        long tsTime = getSecondNow();
+        msg_temp.setMsg_time(tsTime);
         
-        //klo empty gimana? 
-//        if(!(msg.isEmpty())){
-//            return msg;
-//        }
-//        else{
-//            return "";
-//        }
-        return msg;
+        return msg_temp;
     }
 
     @Override
-    public void broadcast_send(String msg, String uname) throws TException {
-        System.out.println(msg);
-        IRCServer.bufmsg ="(" + uname + ") " + msg;
+    public void broadcast_send(String msg, String uname, List<String> channelList) throws TException {
+//        System.out.println(msg);
+//        IRCServer.bufmsg ="(" + uname + ") " + msg;
+        Message msg_temp = makeMessage(msg, channelList, uname);
+        IRCServer.msgList.add(msg_temp);
+    }
+    
+    private long getSecondNow(){
+        java.util.Date today = new java.util.Date();
+        java.sql.Timestamp ts_now = new java.sql.Timestamp(today.getTime());
+        long tsTime = ts_now.getTime();
+        return tsTime;
     }
 
     @Override
-    public String msg_channel_recv(String channel) throws TException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public List<Message> msg_recv() throws TException {
+        List<Message> old_msg = IRCServer.msgList;
+        List<Message> res_msg = new ArrayList<Message>();
+        
+        if (!old_msg.isEmpty()) {
+            for (Message m : old_msg) {
+//                System.out.println("msg time: " + Long.toString(m.getMsg_time()));
+//                System.out.println("fetched time: " + Long.toString(clientLastFetch));
+//                if (m.getMsg_time() > clientLastFetch)
+                    res_msg.add(m);
+            }
+        }
+        
+        return res_msg;
     }
 
     @Override
-    public void msg_channel_send(String channel, String msg) throws TException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public int join_channel(String channel) throws TException {
+        IRCServer.channel_list.add(channel);
+//        this.channel_list.add(channel);
+        return 1;
     }
+
+//    @Override
+//    public int set_nick(String nick) throws TException {
+//        this.nickname = nick;
+//        return 1;
+//    }
+//
+//    @Override
+//    public int remove_channel(String channel) throws TException {
+//        if (IRCServer.channel_list.remove(channel))
+//            return 1;
+//        else
+//            return 0;
+//    }
+//
+//    @Override
+//    public int set_client_last_fetched(long lastFetched) throws TException {
+//        clientLastFetch = lastFetched;
+//        return 1;
+//    }
 }

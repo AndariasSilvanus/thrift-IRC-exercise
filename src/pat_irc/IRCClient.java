@@ -7,7 +7,9 @@
 package pat_irc;
 
 import IRC_service.IRCService;
+import IRC_service.Message;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,17 +25,12 @@ import org.apache.thrift.transport.TTransport;
  */
 public class IRCClient {
     
-    public static String nickname;
-    public static ArrayList<String> channel_list;
-    
-    public IRCClient() {
-        nickname = "";
-        channel_list = new ArrayList<String>();
-    }
+    static String nickname;
+    static List<String> channel_list;
+    static long lastFetch;
     
     public static void main(String [] args) {
         try {
-            nickname = "defaultnick";
             channel_list = new ArrayList<String>();
             
             // Open connection
@@ -43,46 +40,81 @@ public class IRCClient {
             TProtocol protocol = new TBinaryProtocol(transport);
             IRCService.Client client = new IRCService.Client(protocol);
             
-            
             Runnable main_thread = new Runnable() {
                 @Override
                 public void run() {
                     Scanner in = new Scanner(System.in);
                     String s;
+                    String mode = "", channel = "", msg = "";
+                    nickname = "defaultnick";
+                    Scanner input = new Scanner (System.in);
+                    
+//                    try {
+//                        client.set_nick(nickname);
+//                    } catch (TException ex) {
+//                        Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+                    
                     while(true){
                         // Run mode
-                        String mode = "", channel = "", msg = "";
-                        Scanner input = new Scanner (System.in);
                         do {
                             mode = input.next();
                             if (!mode.equals("/EXIT")) {
+                                
                                 if (mode.equals("/NICK")) { // Set nickname's client
                                     nickname = input.next();
+                                    System.out.println("Ganti nickname berhasil!");
+//                                    try {
+//                                        client.set_nick(nickname);
+//                                        System.out.println("Ganti nickname berhasil!");
+//                                    } catch (TException ex) {
+//                                        Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
+//                                    }
                                 }
 
                                 else if (mode.equals("/JOIN")) { // Join channel X
                                     channel = input.next();
-                                    channel_list.add(channel);
-            //                        client.join_channel(channel);
+                                    try {
+                                        client.join_channel(channel);
+                                        channel_list.add(channel);
+                                        System.out.println("Join pada channel " + channel + "berhasil!");
+                                        // client.join_channel(channel);
+                                    } catch (TException ex) {
+                                        Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
                                 }
 
                                 else if (mode.equals("/LEAVE")) { // Leave channel X
                                     channel = input.next();
                                     channel_list.remove(channel);
+                                    System.out.println("Leave pada channel " + channel + "berhasil!");
+                                    
+//                                    try {
+//                                        client.remove_channel(channel);
+//                                        System.out.println("Leave pada channel " + channel + "berhasil!");
+//                                    } catch (TException ex) {
+//                                        Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
+//                                    }
                                 }
+                                
+                                else {
+                                    if (mode.charAt(0) == '@') { // Message channel X
+                                        channel = mode.substring(1, mode.length());
+                                        msg = input.nextLine();
+                                        try {
+                                            client.msg_channel_send(msg, channel, nickname);
+                                        } catch (TException ex) {
+                                            Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
+                                    }
 
-                                else if (mode.charAt(0) == '@') { // Message channel X
-                                    channel = mode.substring(1, mode.length()-1);
-                                    msg = input.next();
-                                }
-
-                                else { // Message to all channel
-                                    msg = mode + " " + input.nextLine();
-                                    try {
-                                        client.broadcast_send(msg, nickname);
-        //                            client.broadcast_msg(msg);
-                                    } catch (TException ex) {
-                                        Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
+                                    else { // Message to all channel
+                                        msg = mode + " " + input.nextLine();
+                                        try {
+                                            client.broadcast_send(msg, nickname, channel_list);
+                                        } catch (TException ex) {
+                                            Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
                                     }
                                 }
                             }
@@ -103,9 +135,28 @@ public class IRCClient {
                             Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
                         }
                         try {
-                            if ((!(client.broadcast_recv().isEmpty())) || (!client.broadcast_recv().equals(""))) {
-                                System.out.println(client.broadcast_recv());
+                            List<Message> msg_list = client.msg_recv();
+//                            System.out.println("panjang list msg fetched: "+Integer.toString(msg_list.size()));
+//                            if (msg_list.isEmpty()) {
+//                                System.out.println("msgList fetched kosong");
+//                            }
+                            if (!msg_list.isEmpty()) {
+                                String res = "";
+                                for (Message m : msg_list) {
+//                                    System.out.println("msg: " + m.getMsg());
+//                                    System.out.println("panjang channel: " + Integer.toString(m.getToChannel().size()));
+                                    
+                                    if (m.getMsg_time() > lastFetch)
+                                        for (String s : m.getToChannel()) {
+                                            if (channel_list.contains(s)) {
+                                                res = "[" + s + "] (" + m.getForm() + ") " + m.getMsg();
+                                                System.out.println(res);
+                                            }
+                                        }
+                                }
                             }
+                            lastFetch = getSecondNow();
+//                            client.set_client_last_fetched(lastFetch);
                         } catch (TException ex) {
                             Logger.getLogger(IRCClient.class.getName()).log(Level.SEVERE, null, ex);
                         }
@@ -119,10 +170,15 @@ public class IRCClient {
         catch (TException x) {
             x.printStackTrace();
         }
-        
-        
-            
     }
+    
+    private static long getSecondNow(){
+        java.util.Date today = new java.util.Date();
+        java.sql.Timestamp ts_now = new java.sql.Timestamp(today.getTime());
+        long tsTime = ts_now.getTime();
+        return tsTime;
+    }
+    
     private static void perform(IRCService.Client client) throws TException {
 //        int product = client.multiply(3,5);
 //        System.out.println("3*5=" + product);
