@@ -18,14 +18,6 @@ import org.apache.thrift.TException;
  */
 public class IRCHandler implements IRCService.Iface{
 
-//    String nickname;
-//    List<String> channel_list;
-//    long clientLastFetch;
-
-//    public IRCHandler() {
-//        channel_list = new ArrayList<String>();
-//    }
-
     @Override
     public void msg_channel_send(String msg, String channel, String uname) throws TException {
         List<String> channeList = new ArrayList<String>();
@@ -48,8 +40,6 @@ public class IRCHandler implements IRCService.Iface{
 
     @Override
     public void broadcast_send(String msg, String uname, List<String> channelList) throws TException {
-//        System.out.println(msg);
-//        IRCServer.bufmsg ="(" + uname + ") " + msg;
         Message msg_temp = makeMessage(msg, channelList, uname);
         IRCServer.msgList.add(msg_temp);
     }
@@ -68,9 +58,6 @@ public class IRCHandler implements IRCService.Iface{
         
         if (!old_msg.isEmpty()) {
             for (Message m : old_msg) {
-//                System.out.println("msg time: " + Long.toString(m.getMsg_time()));
-//                System.out.println("fetched time: " + Long.toString(clientLastFetch));
-//                if (m.getMsg_time() > clientLastFetch)
                     res_msg.add(m);
             }
         }
@@ -81,27 +68,6 @@ public class IRCHandler implements IRCService.Iface{
     @Override
     public int join_channel(String channel) throws TException {
         IRCServer.channel_list.add(channel);
-//        this.channel_list.add(channel);
         return 1;
     }
-
-//    @Override
-//    public int set_nick(String nick) throws TException {
-//        this.nickname = nick;
-//        return 1;
-//    }
-//
-//    @Override
-//    public int remove_channel(String channel) throws TException {
-//        if (IRCServer.channel_list.remove(channel))
-//            return 1;
-//        else
-//            return 0;
-//    }
-//
-//    @Override
-//    public int set_client_last_fetched(long lastFetched) throws TException {
-//        clientLastFetch = lastFetched;
-//        return 1;
-//    }
 }

@@ -50,21 +50,6 @@ public class IRCServer {
                 }
             };
             new Thread(runServer).start();
-            
-            Runnable simple1 = new Runnable() {
-                @Override
-                public void run() {
-                    while(true){
-                            int panjang = msgList.size();
-                            System.out.println("\npanjang msgList: " + Integer.toString(panjang));
-                            System.out.print("isi: ");
-                            for (int i=0; i<msgList.size(); i++) {
-                                System.out.print(msgList.get(i).getMsg() + "|||");
-                            }
-                        }
-                    }
-                };
-            new Thread(simple1).start();
         }
         catch (Exception x) {
             x.printStackTrace();
